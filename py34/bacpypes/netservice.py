@@ -131,7 +131,7 @@ class RouterInfoCache:
             raise RuntimeError("inconsistent parameters")
 
         # remove the dnets from a router or the whole router
-        if (address is not None)
+        if (address is not None):
             router_info = self.routers.get(snet, {}).get(address, None)
             if not router_info:
                 if _debug: RouterInfoCache._debug("    - no route info")
@@ -164,7 +164,8 @@ class RouterInfoCache:
         if _debug: RouterInfoCache._debug("update_source_network %r %r", old_snet, new_snet)
 
         if old_snet not in self.routers:
-            raise RuntimeError("no snet references: %r" % (old_snet,))
+            if _debug: RouterInfoCache._debug("    - no router references: %r", list(self.routers.keys()))
+            return
 
         # move the router info records to the new net
         snet_routers = self.routers[new_snet] = self.routers.pop(old_snet)
@@ -373,6 +374,7 @@ class NetworkServiceAccessPoint(ServiceAccessPoint, Server, DebugContents):
             raise RuntimeError("invalid destination address type: %s" % (npdu.pduDestination.addrType,))
 
         dnet = npdu.pduDestination.addrNet
+        if _debug: NetworkServiceAccessPoint._debug("    - dnet: %r", dnet)
 
         # if the network matches the local adapter it's local
         if (dnet == local_adapter.adapterNet):
@@ -401,7 +403,7 @@ class NetworkServiceAccessPoint(ServiceAccessPoint, Server, DebugContents):
         # look for routing information from the network of one of our
         # adapters to the destination network
         router_info = None
-        for snet in self.adapters:
+        for snet, snet_adapter in self.adapters.items():
             router_info = self.router_info_cache.get_router_info(snet, dnet)
             if router_info:
                 break
@@ -418,7 +420,7 @@ class NetworkServiceAccessPoint(ServiceAccessPoint, Server, DebugContents):
             npdu.pduDestination = router_info.address
 
             # send it along
-            adapter.process_npdu(npdu)
+            snet_adapter.process_npdu(npdu)
 
         else:
             if _debug: NetworkServiceAccessPoint._debug("    - no known path to network")
@@ -914,8 +916,8 @@ class NetworkServiceElement(ApplicationServiceElement):
             # look for routing information from the network of one of our
             # adapters to the destination network
             router_info = None
-            for snet, snet_adapter in self.adapters.items():
-                router_info = self.router_info_cache.get_router_info(snet, dnet)
+            for snet, snet_adapter in sap.adapters.items():
+                router_info = sap.router_info_cache.get_router_info(snet, dnet)
                 if router_info:
                     break
 
