@@ -493,6 +493,9 @@ class Object:
         # empty list of property monitors
         self._property_monitors = defaultdict(list)
 
+        # enable change of value by default, so this can be turned off if object doesnt support it
+        self._object_supports_cov = True
+
         # initialize the object
         for propid, prop in self._properties.items():
             if propid in initargs:

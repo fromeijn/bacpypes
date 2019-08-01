@@ -692,6 +692,10 @@ class ChangeOfValueServices(Capability):
         if not obj:
             raise ExecutionError(errorClass='object', errorCode='unknownObject')
 
+        # if the cov support is turned off for this object than give error
+        if not obj._object_supports_cov:
+            raise ExecutionError(errorClass='object', errorCode='covSubscriptionFailed')
+
         # look for an algorithm already associated with this object
         cov_detection = self.cov_detections.get(obj, None)
 
@@ -745,4 +749,3 @@ class ChangeOfValueServices(Capability):
         if not cancel_subscription:
             if _debug: ChangeOfValueServices._debug("    - send a notification")
             deferred(cov_detection.send_cov_notifications, cov)
-
